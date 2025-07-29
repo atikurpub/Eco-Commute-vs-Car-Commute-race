@@ -12,7 +12,8 @@ int trafficBlock1 = 250;
 int trafficBlock2 = 400;
 
 int timeElapsed = 0;
-bool carBlocked = false;
+int carDelayCounter = 0;
+bool carStopped = false;
 
 void drawRoad() {
     setcolor(WHITE);
@@ -45,7 +46,7 @@ void drawCar(int x) {
     circle(x + 30, 195, 5);
 }
 
-bool isCarBlocked(int x) {
+bool isCarInTraffic(int x) {
     return (x + 40 >= trafficBlock1 && x <= trafficBlock1 + 10) ||
            (x + 40 >= trafficBlock2 && x <= trafficBlock2 + 10);
 }
@@ -57,10 +58,10 @@ void showStats() {
     sprintf(buffer, "Time: %d sec", timeElapsed);
     outtextxy(10, 230, buffer);
 
-    sprintf(buffer, "Eco Time: %d sec", timeElapsed);
+    sprintf(buffer, "Eco Position: %d", ecoX);
     outtextxy(10, 250, buffer);
 
-    sprintf(buffer, "Car Time: %d sec", timeElapsed + 5); // delay for traffic
+    sprintf(buffer, "Car Position: %d", carX);
     outtextxy(10, 270, buffer);
 
     sprintf(buffer, "Pollution: Car = %d, Cycle = 0", timeElapsed * 2);
@@ -70,14 +71,14 @@ void showStats() {
 void showImpactMessage() {
     setcolor(LIGHTGREEN);
     settextstyle(3, 0, 2);
-    outtextxy(150, 330, "🚴‍♂️ Use Eco-Friendly Transport!");
-    outtextxy(160, 360, "🌿 Say NO to Traffic Jams & Pollution!");
+    outtextxy(130, 330, "Use Eco-Friendly Transport!");
+    outtextxy(120, 360, " Say NO to Traffic Jams & Pollution!");
 }
 
 void displayWinner() {
     setcolor(WHITE);
     settextstyle(3, 0, 2);
-    if (ecoX >= finishLine) {
+    if (ecoX >= finishLine && ecoX >= carX) {
         outtextxy(200, 300, "Cyclist Wins!");
         showImpactMessage();
     } else if (carX >= finishLine) {
@@ -97,15 +98,24 @@ int main() {
         drawCar(carX);
         showStats();
 
-        // Cyclist always moves
-        ecoX += 4;
+        // Cyclist moves slowly but consistently
+        ecoX += 3;
 
-        // Car movement with traffic block check
-        if (!isCarBlocked(carX)) {
-            carX += 3;
-            carBlocked = false;
-        } else {
-            carBlocked = true;
+        // Car movement with longer traffic jam simulation
+        if (isCarInTraffic(carX)) {
+            if (!carStopped) {
+                carStopped = true;
+                carDelayCounter = 0;
+            }
+            carDelayCounter++;
+
+            if (carDelayCounter >= 5) {  // 🟢 Increased traffic jam time!
+                carStopped = false;
+            }
+        }
+
+        if (!carStopped) {
+            carX += 4;
         }
 
         timeElapsed++;
@@ -117,3 +127,4 @@ int main() {
     closegraph();
     return 0;
 }
+
